@@ -285,6 +285,93 @@ namespace BMSBT.Controllers
         }
 
 
+        [HttpGet]
+        public IActionResult EBill()
+        {
+            var projects = _dbContext.Configurations
+                           .Where(c => c.ConfigKey == "Project")
+                           .Select(c => c.ConfigValue)
+                           .ToList();
+
+            ViewBag.Projects = projects;
+            // Return an empty view (or you could pass an empty IPagedList<BillDTO> if needed)
+            return View();
+        }
+
+
+
+        public IActionResult EBill(string? month, string? year, string Sector, string Block)
+        {
+
+            if (string.IsNullOrEmpty(month) || string.IsNullOrEmpty(year) && string.IsNullOrEmpty(Sector) && string.IsNullOrEmpty(Block))
+            {
+                ViewBag.ErrorMessage = "Both month and year must be selected.";
+                return View("MaintenanceBills"); // Return the view with an error message
+            }
+
+
+            // Query electricity bills joining ElectricityBills and CustomersDetails
+            var bills = (
+                from bill in _dbContext.ElectricityBills
+                join customer in _dbContext.CustomersDetails
+                     on bill.Btno equals customer.Btno
+                where bill.BillingMonth == month && bill.BillingYear == year
+                select new BillDTO
+                {
+                    Uid = bill.Uid,
+                    CustomerNo = customer.CustomerNo,
+                    Btno = bill.Btno,
+                    CustomerName = customer.CustomerName,
+                    Cnicno = customer.Cnicno,
+                    FatherName = customer.FatherName,
+                    InstalledOn = customer.InstalledOn,
+                    MobileNo = customer.MobileNo,
+                    TelephoneNo = customer.TelephoneNo,
+                    Ntnnumber = customer.Ntnnumber,
+                    City = customer.City,
+                    Project = customer.Project,
+                    SubProject = customer.SubProject,
+                    TariffName = customer.TariffName,
+                    BankNo = customer.BankNo,
+                    BtnoMaintenance = customer.BtnoMaintenance,
+                    Category = customer.Category,
+                    Block = customer.Block,
+                    PlotType = customer.PlotType,
+                    Size = customer.Size,
+                    Sector = customer.Sector,
+                    PloNo = customer.PloNo,
+                    BillStatusMaint = customer.BillStatusMaint,
+                    BillStatus = customer.BillStatus,
+                    InvoiceNo = bill.InvoiceNo,
+                    BillingMonth = bill.BillingMonth,
+                    BillingYear = bill.BillingYear,
+                    BillingDate = bill.BillingDate,
+                    DueDate = bill.DueDate,
+                    IssueDate = bill.IssueDate,
+                    ValidDate = bill.ValidDate,
+                    PaymentStatus = bill.PaymentStatus,
+                    PaymentDate = bill.PaymentDate,
+                    PaymentMethod = bill.PaymentMethod,
+                    BankDetail = bill.BankDetail,
+                    LastUpdated = bill.LastUpdated,
+
+                    BillAmountInDueDate = bill.BillAmountInDueDate,
+                    BillSurcharge = bill.BillSurcharge,
+                    BillAmountAfterDueDate = bill.BillAmountAfterDueDate
+                }
+            ).ToList();
+
+            if (!bills.Any())
+            {
+                ViewBag.ErrorMessage = "No bills found for the selected month and year.";
+            }
+
+            // Optionally, convert to a paged list (adjust page number and page size as needed)
+            var pagedBills = bills.ToPagedList(1, 5000);
+
+            return View("EBills", pagedBills); // Pass the view model to the view
+        }
+
 
 
 
@@ -666,6 +753,63 @@ namespace BMSBT.Controllers
             }
         }
 
+
+
+
+        [Route("PrintEMultiBills")]
+        [HttpPost]
+        public async Task<IActionResult> PrintEMultiBills([FromBody] PrintBillRequest request)
+        {
+            try
+            {
+
+                // Optional: Validate other fields
+                if (string.IsNullOrEmpty(request.project) ||
+                    string.IsNullOrEmpty(request.sector) ||
+                    string.IsNullOrEmpty(request.block) ||
+                    string.IsNullOrEmpty(request.month) ||
+                    string.IsNullOrEmpty(request.year))
+                {
+                    return BadRequest("All fields must be provided.");
+                }
+
+                // Optional: Log or process request info
+                Console.WriteLine($"Generating bills for Project: {request.project}, Sector: {request.sector}, Block: {request.block}, Month: {request.month}, Year: {request.year}");
+
+                var client = _httpClientFactory.CreateClient();
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+               // var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBillByUid?uids={request.uids}";
+
+                var url = $"http://172.20.229.3:84/api/ElectricityBill/GetEBill?project={request.project}&sector={request.sector}&block={request.block}&month={request.month}&year={request.year}";
+
+
+                // If needed, you can append filters to the URL or send them in headers/body to the API.
+                // For now, we just log them.
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var pdfData = await response.Content.ReadAsByteArrayAsync();
+
+                    if (pdfData == null || pdfData.Length == 0)
+                    {
+                        return BadRequest("Received empty PDF data");
+                    }
+
+                    Response.Headers.Add("Content-Disposition", "attachment; filename=MaintenanceBill.pdf");
+                    return File(pdfData, "application/pdf");
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                return StatusCode((int)response.StatusCode, $"API Error: {errorContent}");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
 
 
