@@ -310,6 +310,15 @@ namespace BMSBT.Controllers
             ViewBag.Years = GetYears();
 
 
+               ViewBag.Blocks = _dbContext.CustomersMaintenance
+                .Select(c => c.Block)
+                .Where(b => !string.IsNullOrEmpty(b))
+                .Distinct()
+                .OrderBy(b => b)
+                .ToList();
+            ViewBag.SelectedBlock = block; // This comes from your action parameter
+
+
             // Check if all filter parameters are empty
             bool noFilterSelected = string.IsNullOrEmpty(billingMonth) &&
                                     string.IsNullOrEmpty(billingYear) &&
@@ -334,9 +343,14 @@ namespace BMSBT.Controllers
 
 
 
+            //var baseQuery = from mb in _dbContext.MaintenanceBills
+            //                join cd in _dbContext.CustomersMaintenance on mb.Btno equals cd.Btno
+            //                select new { mb, cd };
+
             var baseQuery = from mb in _dbContext.MaintenanceBills
-                            join cd in _dbContext.CustomersDetails on mb.Btno equals cd.Btno
-                            select new { mb, cd };
+                            join cm in _dbContext.CustomersMaintenance on mb.Btno equals cm.BTNo
+                            select new { mb, cm };
+
 
             // Apply filters
             if (!string.IsNullOrEmpty(billingMonth))
@@ -351,7 +365,7 @@ namespace BMSBT.Controllers
 
             if (!string.IsNullOrEmpty(block))
             {
-                baseQuery = baseQuery.Where(x => x.cd.Block == block);
+                baseQuery = baseQuery.Where(x => x.cm.Block == block);
             }
 
             if (!string.IsNullOrEmpty(btNo))
@@ -369,7 +383,12 @@ namespace BMSBT.Controllers
                 BillingYear = x.mb.BillingYear,
                 BillAmountInDueDate = x.mb.BillAmountInDueDate,
                 PaymentStatus = x.mb.PaymentStatus,
-                Block = x.cd.Block
+                Block = x.cm.Block,
+                DueDate = x.mb.DueDate
+                //DueDate = x.mb.DueDate.HasValue
+                //    ? x.mb.DueDate.Value.ToString("dd/MM/yyyy")
+                //    : null // Format the DueDate as "dd/MM/yyyy"        
+
             });
 
             const int pageSize = 50;
@@ -413,11 +432,19 @@ namespace BMSBT.Controllers
         [HttpGet]
         public IActionResult Edit(int id)
         {
-            var bill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
+            var bill = _dbContext.MaintenanceBills.Find(id);
+            //var bill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
             if (bill == null)
             {
                 return NotFound();
             }
+
+            // Load Block options from CustomersMaintenance
+            ViewBag.BlockList = _dbContext.CustomersMaintenance
+                .Select(x => x.Block)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
 
             return View(bill);
         }

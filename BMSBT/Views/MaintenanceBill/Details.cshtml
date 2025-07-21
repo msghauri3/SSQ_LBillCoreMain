@@ -78,42 +78,15 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Customer No</td>
-                <td>@Model.CustomerNo</td>
-            </tr>
-            <tr>
-                <td>Customer Name</td>
-                <td>@Model.CustomerName</td>
-            </tr>
-            <tr>
-                <td>Issue Date</td>
-                <td>@Model.IssueDate</td>
-            </tr>
-            <tr>
-                <td>Due Date</td>
-                <td>@Model.DueDate</td>
-            </tr>
-            <tr>
-                <td>Tax Amount</td>
-                <td>@Model.TaxAmount</td>
-            </tr>
-            <tr>
-                <td>Bill Amount (Due Date)</td>
-                <td>@Model.BillAmountInDueDate</td>
-            </tr>
-            <tr>
-                <td>Bill Amount (After Due Date)</td>
-                <td>@Model.BillAmountAfterDueDate</td>
-            </tr>
-            <tr>
-                <td>Month</td>
-                <td>@Model.BillingMonth</td>
-            </tr>
-            <tr>
-                <td>Year</td>
-                <td>@Model.BillingYear</td>
-            </tr>
+            <tr><td>Customer No</td><td>@Model.CustomerNo</td></tr>
+            <tr><td>Customer Name</td><td>@Model.CustomerName</td></tr>
+            <tr><td>Issue Date</td><td>@Model.IssueDate?.ToString("dd-MM-yyyy")</td></tr>
+            <tr><td>Due Date</td><td>@Model.DueDate?.ToString("dd-MM-yyyy")</td></tr>
+            <tr><td>Tax Amount</td><td>@Model.TaxAmount?.ToString("C")</td></tr>
+            <tr><td>Bill Amount (Due Date)</td><td>@Model.BillAmountInDueDate?.ToString("C")</td></tr>
+            <tr><td>Bill Amount (After Due Date)</td><td>@Model.BillAmountAfterDueDate?.ToString("C")</td></tr>
+            <tr><td>Month</td><td>@Model.BillingMonth</td></tr>
+            <tr><td>Year</td><td>@Model.BillingYear</td></tr>
         </tbody>
     </table>
     <div class="invoice-footer">

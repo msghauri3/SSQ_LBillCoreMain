@@ -12,4 +12,5 @@ public class MaintenanceBillViewModel
     public int? BillAmountInDueDate { get; set; }
     public string PaymentStatus { get; set; }
     public string Block { get; set; } // From CustomersDetail
+    public DateOnly? DueDate { get; set; }
 }
