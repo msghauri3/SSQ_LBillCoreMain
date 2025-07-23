@@ -382,9 +382,11 @@ namespace BMSBT.Controllers
                 BillingMonth = x.mb.BillingMonth,
                 BillingYear = x.mb.BillingYear,
                 BillAmountInDueDate = x.mb.BillAmountInDueDate,
+                BillAmountAfterDueDate = x.mb.BillAmountAfterDueDate,
                 PaymentStatus = x.mb.PaymentStatus,
                 Block = x.cm.Block,
-                DueDate = x.mb.DueDate
+                DueDate = x.mb.DueDate,
+              
                 //DueDate = x.mb.DueDate.HasValue
                 //    ? x.mb.DueDate.Value.ToString("dd/MM/yyyy")
                 //    : null // Format the DueDate as "dd/MM/yyyy"        
@@ -451,42 +453,120 @@ namespace BMSBT.Controllers
 
 
 
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult Edit(int id, MaintenanceBill updatedBill)
+        //{
+
+        //    if (id != updatedBill.Uid)
+        //    {
+        //        return BadRequest();
+        //    }
+
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return View(updatedBill);
+        //    }
+
+        //    var existingBill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
+        //    if (existingBill == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    // Update properties
+        //    existingBill.CustomerName = updatedBill.CustomerName;
+        //    existingBill.Btno = updatedBill.Btno;
+        //    existingBill.BillingMonth = updatedBill.BillingMonth;
+        //    existingBill.BillingYear = updatedBill.BillingYear;
+        //    existingBill.BillAmountInDueDate = updatedBill.BillAmountInDueDate;
+        //    existingBill.BillAmountAfterDueDate = updatedBill.BillAmountAfterDueDate;
+        //    existingBill.PaymentStatus = updatedBill.PaymentStatus;
+        //    existingBill.LastUpdated = DateTime.Now;
+
+        //    _dbContext.SaveChanges();
+
+        //    return RedirectToAction(nameof(MaintenanceBillsSearch));
+        //}
+
+
+        ////Working
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Edit(MaintenanceBill bill)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return View(bill);
+
+        //    var existingBill = await _dbContext.MaintenanceBills.FindAsync(bill.Uid);
+        //    if (existingBill == null)
+        //        return NotFound();
+
+        //    // Only update DueDate
+        //    if (existingBill.DueDate != bill.DueDate)
+        //    {
+        //        string user = HttpContext.Session.GetString("Username") ?? "Unknown User";
+        //        string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+        //        string newEntry = $"DueDate updated to {bill.DueDate:yyyy-MM-dd} by {user} at {timestamp}";
+
+        //        // Append to history
+        //        if (!string.IsNullOrEmpty(existingBill.History))
+        //        {
+        //            existingBill.History += Environment.NewLine + newEntry;
+        //        }
+        //        else
+        //        {
+        //            existingBill.History = newEntry;
+        //        }
+
+        //        existingBill.DueDate = bill.DueDate;
+        //    }
+
+        //    // Save changes
+        //    await _dbContext.SaveChangesAsync();
+        //    return RedirectToAction("MaintenanceBillsSearch");
+        //}
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, MaintenanceBill updatedBill)
+        public async Task<IActionResult> Edit(MaintenanceBill model, string action)
         {
+            var bill = await _dbContext.MaintenanceBills.FindAsync(model.Uid);
+            if (bill == null) return NotFound();
 
-            if (id != updatedBill.Uid)
+            string user = HttpContext.Session.GetString("Username") ?? "Unknown User";
+            string timestamp = DateTime.Now.ToString("dd-MMM-yyyy HH:mm");
+
+            if (action == "delete")
             {
-                return BadRequest();
+                // Soft delete
+                if (!bill.Btno.EndsWith("-Delete"))
+                {
+                    bill.Btno += "-Delete";
+                    bill.BillingMonth += "-Delete";
+                }
+
+                bill.History += Environment.NewLine + $"Soft deleted by {user} on {timestamp}";
+
+                await _dbContext.SaveChangesAsync();
+                return RedirectToAction("MaintenanceBillsSearch");
             }
 
-            if (!ModelState.IsValid)
+            if (action == "update")
             {
-                return View(updatedBill);
+                if (bill.DueDate != model.DueDate)
+                {
+                    bill.History += Environment.NewLine + $"DueDate updated from {bill.DueDate:dd-MMM-yyyy} to {model.DueDate:dd-MMM-yyyy} by {user} on {timestamp}";
+                    bill.DueDate = model.DueDate;
+                }
+
+                await _dbContext.SaveChangesAsync();
+                return RedirectToAction("MaintenanceBillsSearch");
             }
 
-            var existingBill = _dbContext.MaintenanceBills.FirstOrDefault(x => x.Uid == id);
-            if (existingBill == null)
-            {
-                return NotFound();
-            }
-
-            // Update properties
-            existingBill.CustomerName = updatedBill.CustomerName;
-            existingBill.Btno = updatedBill.Btno;
-            existingBill.BillingMonth = updatedBill.BillingMonth;
-            existingBill.BillingYear = updatedBill.BillingYear;
-            existingBill.BillAmountInDueDate = updatedBill.BillAmountInDueDate;
-            existingBill.PaymentStatus = updatedBill.PaymentStatus;
-            existingBill.LastUpdated = DateTime.Now;
-
-            _dbContext.SaveChanges();
-
-            return RedirectToAction(nameof(MaintenanceBillsSearch));
+            return View(model);
         }
-
-
 
 
 

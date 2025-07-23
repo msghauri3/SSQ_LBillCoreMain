@@ -28,6 +28,10 @@
         border-radius: 6px;
         margin-bottom: 20px;
     }
+
+    .btn-space-bottom {
+        margin-bottom: 30px; /* or any value you prefer */
+    }
 </style>
 
 <form asp-action="MaintenanceBillsSearch" method="get" class="filter-section">
@@ -85,20 +89,21 @@
 @if (ViewBag.ShowGrid == true)
 {
     <form method="post" asp-action="GenerateBills">
-        <div class="text-end mt-2">
+        <div class="text-end mt-2 mb-4">
             <button type="submit" class="btn btn-success">Generate Bills</button>
         </div>
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
                 <tr>
-                        <th><input type="checkbox" id="selectAll" /></th>
+                    <th><input type="checkbox" id="selectAll" /></th>
                     <th>Customer Name</th>
                     <th>BT No</th>
                     <th>Block</th>
                     <th>Billing Month</th>
                     <th>Billing Year</th>
-                    <th>Amount</th>
+                    <th>Amount Due Date</th>
+                    <th>Amount After Due Date</th>
                     <th>Due Date</th>
                     <th>Status</th>
                     <th></th>
@@ -119,7 +124,8 @@
                             <td>@item.Block</td>
                             <td>@item.BillingMonth</td>
                             <td>@item.BillingYear</td>
-                            <td>@item.BillAmountInDueDate?.ToString("C")</td>
+                            <td>@item.BillAmountInDueDate?.ToString()</td>
+                            <td>@item.BillAmountAfterDueDate?.ToString()</td>
                             <td>@item.DueDate?.ToString("dd-MMMM-yyyy")</td>
                             <td>@item.PaymentStatus</td>
                             <td> <a asp-action="Details" asp-route-id="@item.Uid" class="btn btn-info btn-sm">Details</a></td>
@@ -129,7 +135,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="7" class="text-center">No records found</td>
+                        <td colspan="9" class="text-center">No records found</td>
                     </tr>
                 }
             </tbody>
