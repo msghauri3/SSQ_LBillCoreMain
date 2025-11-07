@@ -789,14 +789,20 @@ namespace BMSBT.Controllers
 
                 //var url = $"http://172.20.228.2/api/EBill/PrintEBills";
 
-                var url = $"http://172.20.228.2/api/EBill01/GetEBill" +
-                $"?block={Uri.EscapeDataString(request.block)}" +
-                $"&Category={Uri.EscapeDataString(request.category)}" +
-                $"&month={Uri.EscapeDataString(request.month)}" +
-                $"&year={Uri.EscapeDataString(request.year)}" +
-                $"&Project={Uri.EscapeDataString(request.project)}";
+                //var url = $"http://172.20.228.2/api/EBill01/GetEBill" +
+                //$"?block={Uri.EscapeDataString(request.block)}" +
+                //$"&Category={Uri.EscapeDataString(request.category)}" +
+                //$"&month={Uri.EscapeDataString(request.month)}" +
+                //$"&year={Uri.EscapeDataString(request.year)}" +
+                //$"&Project={Uri.EscapeDataString(request.project)}";
 
 
+
+                var url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?category={request.category}&block={request.block}&month={request.month}&year={request.year}&project={request.project}";
+              
+                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Commercial&month=October&year=2025&Project=Mohlanwal";
+
+                //url = $"http://172.20.228.2/api/ElectricityBill/GetEBill?block=Safari%20Villas&Category=Residential&month=October&year=2025&Project=Mohlanwal";
 
 
                 // If needed, you can append filters to the URL or send them in headers/body to the API.
