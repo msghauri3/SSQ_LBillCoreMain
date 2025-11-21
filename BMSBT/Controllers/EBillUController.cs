@@ -40,9 +40,7 @@ namespace BMSBT.Controllers
         {
             // load the data the view expects (replace EBillViewModel with your actual model)
             var model = _dbContext.Configurations
-                        .AsQueryable();
-
-         
+                        .AsQueryable();        
 
             var modelList = model.ToList(); // never null, maybe empty
             return View(modelList);
