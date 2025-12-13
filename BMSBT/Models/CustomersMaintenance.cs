@@ -93,9 +93,6 @@ namespace BMSBT.Models
 
         public string? History { get; set; }
 
-        [StringLength(100)]
-        public string? MeterNo { get; set; }
-
         [StringLength(50)]
         public string? BillGenerationStatus { get; set; }
     }

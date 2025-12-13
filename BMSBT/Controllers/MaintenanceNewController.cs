@@ -128,6 +128,11 @@ namespace BMSBT.Controllers
         }
 
 
+        public IActionResult CustomersMaintenance()
+        {
+            var customers = _dbContext.CustomersMaintenance.ToList();
+            return View(customers);
+        }
 
 
 
@@ -157,7 +162,7 @@ namespace BMSBT.Controllers
 
                 if (!string.IsNullOrEmpty(btNoSearch))
                 {
-                    query = query.Where(c => c. BTNo.Contains(btNoSearch));
+                    query = query.Where(c => c.BTNo.Contains(btNoSearch));
                 }
 
                 filteredData = query.GroupBy(c => c.Sector)

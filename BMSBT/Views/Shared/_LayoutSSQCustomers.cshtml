@@ -16,10 +16,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
 
-  
-    <style>  
+
+    <style>
         .sidebar {
-            position: absolute; /* Allow normal scrolling behavior */            
+            position: absolute; /* Allow normal scrolling behavior */
         }
 
         .navbar2-top {
@@ -27,24 +27,25 @@
             padding: 0px 0;
         }
 
-        .navbar2-top .container { 
+            .navbar2-top .container {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-        }
+            }
 
-        .navbar2-top .left-section {
+            .navbar2-top .left-section {
                 font-weight: bold;
-        }
+            }
 
-       .navbar2-top .right-section {
+            .navbar2-top .right-section {
                 text-align: right;
                 flex-grow: 1;
-       }
+            }
 
-       .navbar2-top .left-section a {
+            .navbar2-top .left-section a {
                 color: #0056b3;
-       }
+            }
+
         a {
             text-decoration: none !important;
         }
@@ -55,10 +56,8 @@
             font-weight: normal;
         }
 
-        
-
     </style>
-    
+
 
 </head>
 <body>
@@ -113,69 +112,32 @@
                     <li>
                         <a asp-controller="SSQCustomers" asp-action="Dashboard">
                             <i class="fas fa-chart-area" style="color: yellowgreen; font-size: 14px;"></i>
-                      Dashboard
+                            Dashboard
                         </a>
                     </li>
 
+
+
+
                     <li>
-                        <a asp-controller="Customers" asp-action="Index">
+                        <a asp-controller="SSQCustomers" asp-action="Index">
                             <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
                             Customers
                         </a>
                     </li>
 
-
                     <li>
-                        <a asp-controller="Customers" asp-action="SearchAll">
-                            <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
-                            Search
-                        </a>
-                    </li>
-
-
-                    <li>
-                        <a asp-controller="Customers" asp-action="CustomersSelection">
+                        <a asp-controller="SSQCustomers" asp-action="CustomersSelection">
                             <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            Summary
+                            Selection
                         </a>
                     </li>
 
+
                     <li>
-                        <a asp-controller="Customers" asp-action="CustomersSelection">
+                        <a asp-controller="SSQCustomers" asp-action="Reports">
                             <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
                             Reports
-                        </a>
-                    </li>
-
-
-                  
-
-
-                    @* <li>
-                        <a asp-controller="Customers" asp-action="Index">
-                            <i class="fas fa-search" style="color: yellowgreen; font-size: 14px;"></i>
-                            Customers
-                        </a>
-                    </li> *@
-
-
-
-                  
-
-
-
-                    <li>
-                        <a asp-controller="Customers" asp-action="SearchCustomers">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            By Selection
-                        </a>
-                    </li>
-
-
-                    <li>
-                        <a asp-controller="Customers" asp-action="AllCustomers">
-                            <i class='fas fa-users' style="color: yellowgreen; font-size: 14px;"></i>
-                            By Block
                         </a>
                     </li>
 
@@ -185,9 +147,9 @@
                             By Sector
                         </a>
                     </li>
-                  
 
-                   @* 
+
+                    @* 
                      <li>
                         <h4 style="margin-top: 30px; font-size: 16px;">Quick Links</h4>
                     </li>    
@@ -207,12 +169,12 @@
                     </li> *@
                 </ul>
 
-               
 
 
 
-                @* <!-- Separate Quick Links Block -->
-                <div class="quick-links-block">
+
+                <!-- Separate Quick Links Block -->
+                @* <div class="quick-links-block">
                     <h4>Quick Links</h4>
                     <ul class="nav flex-column">
                         <li>
@@ -235,7 +197,7 @@
             </div>
 
 
-          
+
 
 
             <!-- Right Content Area -->

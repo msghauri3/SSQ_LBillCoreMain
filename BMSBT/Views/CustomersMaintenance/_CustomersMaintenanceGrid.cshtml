@@ -1,0 +1,46 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+
+@foreach (var item in Model)
+{
+    <tr data-id="@item.Uid">
+        <td>
+            <input type="checkbox" class="record-checkbox"
+                   value="@item.Uid"
+                   data-btno="@item.BTNo"
+                   data-customer-name="@item.CustomerName"
+                   data-tariff-name="@item.TariffName" />
+        </td>
+        <td>@item.CustomerName</td>
+        <td>@item.BTNo</td>
+        <td>@item.Project</td>
+        <td>@item.SubProject</td>
+        <td>@item.Sector</td>
+        <td>@item.TariffName</td>
+        <td>@item.BTNoMaintenance</td>
+        <td>
+            <span class="badge @(item.BillStatusMaint == "Paid" ? "badge-success" : "badge-warning")">
+                @item.BillStatusMaint
+            </span>
+        </td>
+        <td>
+            <div class="btn-group btn-group-sm">
+                <a href="/CustomersMaintenance/Edit/@item.Uid" class="btn btn-outline-primary" title="Edit">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <a href="/CustomersMaintenance/Details/@item.Uid" class="btn btn-outline-info" title="Details">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+                <a href="/CustomersMaintenance/Delete/@item.Uid" class="btn btn-outline-danger" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </a>
+            </div>
+        </td>
+    </tr>
+}
+
+@if (!Model.Any())
+{
+    <tr>
+        <td colspan="10" class="text-center">No maintenance customers found</td>
+    </tr>
+}

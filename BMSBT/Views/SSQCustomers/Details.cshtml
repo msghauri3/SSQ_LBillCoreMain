@@ -1,0 +1,77 @@
+﻿@model BMSBT.Models.CustomersDetail
+
+@{
+    ViewData["Title"] = "Customer Details";
+    Layout = "_LayoutSSQCustomers";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-user"></i> @ViewData["Title"]
+            </h4>
+        </div>
+
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Customer No:</dt>
+                <dd class="col-sm-9">@Model.CustomerNo</dd>
+
+                <dt class="col-sm-3">Customer Name:</dt>
+                <dd class="col-sm-9">@Model.CustomerName</dd>
+
+                <dt class="col-sm-3">CNIC No:</dt>
+                <dd class="col-sm-9">@Model.Cnicno</dd>
+
+                <dt class="col-sm-3">Father Name:</dt>
+                <dd class="col-sm-9">@Model.FatherName</dd>
+
+                <dt class="col-sm-3">Mobile No:</dt>
+                <dd class="col-sm-9">@Model.MobileNo</dd>
+
+                <dt class="col-sm-3">City:</dt>
+                <dd class="col-sm-9">@Model.City</dd>
+
+                <dt class="col-sm-3">Project:</dt>
+                <dd class="col-sm-9">@Model.Project</dd>
+
+                <dt class="col-sm-3">Sub Project:</dt>
+                <dd class="col-sm-9">@Model.SubProject</dd>
+
+                <dt class="col-sm-3">Sector:</dt>
+                <dd class="col-sm-9">@Model.Sector</dd>
+
+                <dt class="col-sm-3">Block:</dt>
+                <dd class="col-sm-9">@Model.Block</dd>
+
+                <dt class="col-sm-3">Plot No:</dt>
+                <dd class="col-sm-9">@Model.PloNo</dd>
+
+                <dt class="col-sm-3">Category:</dt>
+                <dd class="col-sm-9">@Model.Category</dd>
+
+                <dt class="col-sm-3">Tariff Name:</dt>
+                <dd class="col-sm-9">@Model.TariffName</dd>
+
+                <dt class="col-sm-3">Meter Type:</dt>
+                <dd class="col-sm-9">@Model.MeterType</dd>
+
+                <dt class="col-sm-3">Meter No:</dt>
+                <dd class="col-sm-9">@Model.MeterNo</dd>
+
+                <dt class="col-sm-3">Installed On:</dt>
+                <dd class="col-sm-9">@Model.InstalledOn</dd>
+            </dl>
+
+            <div class="mt-4">
+                <a asp-action="Edit" asp-route-id="@Model.Uid" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Edit
+                </a>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

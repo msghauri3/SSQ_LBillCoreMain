@@ -1,0 +1,404 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+
+@{
+    ViewData["Title"] = "Maintenance Customers";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+
+<head>
+    <style>
+        .row-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .create-link {
+            text-decoration: none;
+            color: #142141;
+            font-weight: bold;
+        }
+
+            .create-link:hover {
+                color: #0066cc;
+            }
+
+        .dropdown-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .custom-dropdown {
+            width: 200px;
+            height: 40px;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-container {
+            margin-top: 20px;
+        }
+
+        .badge-paid {
+            background-color: #28a745;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-pending {
+            background-color: #ffc107;
+            color: black;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-overdue {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .badge-secondary {
+            background-color: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #studentsTable tbody tr {
+            cursor: pointer;
+        }
+
+            #studentsTable tbody tr:hover {
+                background-color: #f5f5f5;
+            }
+
+        .btn-group-sm > .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p class="mt-2">Loading customers...</p>
+        </div>
+    </div>
+
+    <div class="row-container">
+        <h2>Maintenance Customers</h2>
+        <a asp-action="Create" class="btn btn-primary create-link">
+            <i class="fas fa-plus"></i> Create New
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Filter Maintenance Customers</h5>
+        </div>
+        <div class="card-body">
+            <div class="dropdown-container">
+                <select id="projectDropdown" class="form-control custom-dropdown">
+                    <option value="">-- Select Project --</option>
+                </select>
+                <select id="subprojectDropdown" class="form-control custom-dropdown">
+                    <option value="">-- Select Subproject --</option>
+                </select>
+                <select id="sectorDropdown" class="form-control custom-dropdown">
+                    <option value="">-- Select Sector --</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card table-container">
+        <div class="card-body">
+            <div class="gridContainer">
+                <table id="studentsTable" class="table table-striped table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th>Customer Name</th>
+                            <th>BT No</th>
+                            <th>CNIC No</th>
+                            <th>Father Name</th>
+                            <th>Mobile No</th>
+                            <th>Project</th>
+                            <th>SubProject</th>
+                            <th>Sector</th>
+                            <th>Tariff</th>
+                            <th>Maintenance BT No</th>
+                            <th>Bill Status</th>
+                            <th width="120px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerGridBody">
+                        <tr>
+                            <td colspan="12" class="text-center">Please select project and subproject to view customers</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+        let dataTable;
+
+        $(document).ready(function () {
+            console.log('DOM loaded, initializing Maintenance Customers...');
+
+            // Initialize DataTable with empty data
+            initializeDataTable();
+
+            // Load dropdowns
+            loadDropdowns();
+
+            // Add event listeners for dropdown changes
+            $('#projectDropdown').change(updateDropdowns);
+            $('#subprojectDropdown').change(updateGrid);
+            $('#sectorDropdown').change(updateGrid);
+        });
+
+        function initializeDataTable() {
+            if ($.fn.DataTable.isDataTable('#studentsTable')) {
+                dataTable.destroy();
+            }
+
+            dataTable = $('#studentsTable').DataTable({
+                paging: true,
+                searching: true,
+                lengthChange: true,
+                pageLength: 10,
+                responsive: true,
+                ordering: true,
+                info: true,
+                autoWidth: false,
+                language: {
+                    search: "Search customers:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No customers found",
+                    emptyTable: "No data available in table",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
+            });
+        }
+
+        function loadDropdowns() {
+            console.log('Loading dropdowns...');
+            showLoading();
+
+            // Load projects
+            axios.get('/Configs/GetProjects')
+                .then(response => {
+                    console.log('Projects loaded:', response.data);
+                    populateDropdown('projectDropdown', response.data, 'Projects');
+                })
+                .catch(error => console.error('Error loading projects:', error))
+                .finally(() => hideLoading());
+
+            // Load sectors
+            axios.get('/Configs/GetSectors')
+                .then(response => {
+                    console.log('Sectors loaded:', response.data);
+                    populateDropdown('sectorDropdown', response.data, 'Sectors');
+                })
+                .catch(error => console.error('Error loading sectors:', error));
+        }
+
+        function populateDropdown(dropdownId, data, placeholder) {
+            const dropdown = document.getElementById(dropdownId);
+            dropdown.innerHTML = `<option value="">-- Select ${placeholder} --</option>`;
+
+            if (data && data.length > 0) {
+                data.forEach(item => {
+                    const option = document.createElement('option');
+
+                    if (typeof item === 'string') {
+                        option.value = item;
+                        option.textContent = item;
+                    } else if (typeof item === 'object' && item !== null) {
+                        const value = item.value || item.id || item.uid || item.name || item.tarrifName;
+                        const text = item.text || item.name || item.tarrifName || value;
+
+                        if (value && text) {
+                            option.value = value;
+                            option.textContent = text;
+                        }
+                    }
+
+                    if (option.value && option.textContent) {
+                        dropdown.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        function updateDropdowns() {
+            const selectedProject = $('#projectDropdown').val();
+
+            if (selectedProject) {
+                showLoading();
+
+                // Update subprojects based on selected project
+                axios.get(`/Configs/GetSubProjects?project=${encodeURIComponent(selectedProject)}`)
+                    .then(response => {
+                        console.log('Subprojects loaded:', response.data);
+                        populateDropdown('subprojectDropdown', response.data, 'Subproject');
+                        updateGrid(); // Update grid when project changes
+                    })
+                    .catch(error => {
+                        console.error('Error loading subprojects:', error);
+                        $('#subprojectDropdown').html('<option value="">-- Select Subproject --</option>');
+                    })
+                    .finally(() => hideLoading());
+
+                // Update sectors based on selected project
+                axios.get(`/Configs/GetSectors?project=${encodeURIComponent(selectedProject)}`)
+                    .then(response => {
+                        console.log('Sectors loaded:', response.data);
+                        populateDropdown('sectorDropdown', response.data, 'Sector');
+                    })
+                    .catch(error => {
+                        console.error('Error loading sectors:', error);
+                        $('#sectorDropdown').html('<option value="">-- Select Sector --</option>');
+                    });
+            } else {
+                // Clear dependent dropdowns
+                $('#subprojectDropdown').html('<option value="">-- Select Subproject --</option>');
+                $('#sectorDropdown').html('<option value="">-- Select Sector --</option>');
+                clearGrid();
+            }
+        }
+
+        function updateGrid() {
+            const selectedProject = $('#projectDropdown').val();
+            const selectedSubProject = $('#subprojectDropdown').val();
+            const selectedSector = $('#sectorDropdown').val();
+
+            console.log('Updating grid with filters:', {
+                project: selectedProject,
+                subproject: selectedSubProject,
+                sector: selectedSector
+            });
+
+            if (selectedProject && selectedSubProject) {
+                showLoading();
+
+                axios.get(`/CustomersMaintenance/GetCustomersPSPS`, {
+                    params: {
+                        project: selectedProject,
+                        subproject: selectedSubProject,
+                        sectorname: selectedSector
+                    }
+                })
+                .then(response => {
+                    console.log('Customers data received');
+
+                    // Update table body with the HTML response
+                    $('#customerGridBody').html(response.data);
+
+                    // Reinitialize DataTable to apply pagination and search
+                    initializeDataTable();
+                })
+                .catch(error => {
+                    console.error('Error loading customers:', error);
+                    $('#customerGridBody').html('<tr><td colspan="12" class="text-center text-danger">Error loading customers data</td></tr>');
+                    initializeDataTable();
+                })
+                .finally(() => {
+                    hideLoading();
+                });
+            } else {
+                clearGrid();
+            }
+        }
+
+        function clearGrid() {
+            if ($.fn.DataTable.isDataTable('#studentsTable')) {
+                dataTable.destroy();
+            }
+            $('#customerGridBody').html('<tr><td colspan="12" class="text-center">Please select project and subproject to view customers</td></tr>');
+            initializeDataTable();
+        }
+
+        function showLoading() {
+            $('#loadingOverlay').show();
+        }
+
+        function hideLoading() {
+            $('#loadingOverlay').hide();
+        }
+
+        // Row click event for customer details
+        $(document).on('click', '#studentsTable tbody tr', function () {
+            const customerId = $(this).data('customer-id');
+            if (customerId) {
+                window.location.href = '/CustomersMaintenance/Details/' + customerId;
+            }
+        });
+
+        // Double-click event for editing
+        $(document).on('dblclick', '#studentsTable tbody tr', function () {
+            const customerId = $(this).data('customer-id');
+            if (customerId) {
+                window.location.href = '/CustomersMaintenance/Edit/' + customerId;
+            }
+        });
+    </script>
+}

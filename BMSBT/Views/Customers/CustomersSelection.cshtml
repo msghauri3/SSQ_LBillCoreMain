@@ -1,0 +1,583 @@
+﻿@{
+    ViewData["Title"] = "Customer Selection Report";
+    Layout = "_LayoutCustomers";
+}
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-filter"></i> @ViewData["Title"]
+            </h4>
+        </div>
+
+        <div class="card-body">
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @ViewBag.ErrorMessage
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            }
+
+            <!-- Selection Criteria Section -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search"></i> Selection Criteria
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Project Dropdown -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="projectSelect"><i class="fas fa-building"></i> Select Project:</label>
+                                <select id="projectSelect" class="form-control">
+                                    <option value="All">-- All Projects --</option>
+                                    @if (ViewBag.Projects != null)
+                                    {
+                                        foreach (var project in ViewBag.Projects)
+                                        {
+                                            <option value="@project">@project</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Block Dropdown -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="blockSelect"><i class="fas fa-th-large"></i> Select Block:</label>
+                                <select id="blockSelect" class="form-control">
+                                    <option value="All">-- All Blocks --</option>
+                                    <optgroup label="Mohlanwal Blocks">
+                                        @{
+                                            var mohlanwalBlocks = ViewBag.MohlanwalBlocks as List<string>;
+                                            if (mohlanwalBlocks != null && mohlanwalBlocks.Any())
+                                            {
+                                                foreach (var block in mohlanwalBlocks)
+                                                {
+                                                    <option value="@block">@block</option>
+                                                }
+                                            }
+                                        }
+                                    </optgroup>
+                                    <optgroup label="Orchards Blocks">
+                                        @{
+                                            var orchardsBlocks = ViewBag.OrchardsBlocks as List<string>;
+                                            if (orchardsBlocks != null && orchardsBlocks.Any())
+                                            {
+                                                foreach (var block in orchardsBlocks)
+                                                {
+                                                    <option value="@block">@block</option>
+                                                }
+                                            }
+                                        }
+                                    </optgroup>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Category Dropdown -->
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="categorySelect"><i class="fas fa-tag"></i> Select Category:</label>
+                                <select id="categorySelect" class="form-control">
+                                    <option value="All">-- All Categories --</option>
+                                    @if (ViewBag.Categories != null)
+                                    {
+                                        foreach (var category in ViewBag.Categories)
+                                        {
+                                            <option value="@category">@category</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="btn-group" role="group">
+                                <button id="searchBtn" class="btn btn-primary">
+                                    <i class="fas fa-search"></i> Search Customers
+                                </button>
+                                <button id="getAllBtn" class="btn btn-info">
+                                    <i class="fas fa-list"></i> Get All Details
+                                </button>
+                                <button id="clearBtn" class="btn btn-secondary">
+                                    <i class="fas fa-redo"></i> Clear Filters
+                                </button>
+                                <button id="exportBtn" class="btn btn-success" disabled>
+                                    <i class="fas fa-file-excel"></i> Export to Excel
+                                </button>
+                                <button id="printBtn" class="btn btn-warning" disabled>
+                                    <i class="fas fa-print"></i> Print Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="text-center mb-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p>Searching customers...</p>
+            </div>
+
+            <!-- Results Summary -->
+            <div id="resultsSummary" class="card mb-4" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Search Results Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="summaryContent"></div>
+                </div>
+            </div>
+
+            <!-- Customer Details Table Section -->
+            <div id="customersTableSection" class="card" style="display: none;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table"></i> Customer Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered table-hover" id="customersTable">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Customer No</th>
+                                    <th>Customer Name</th>
+                                    <th>CNIC No</th>
+                                    <th>Mobile No</th>
+                                    <th>City</th>
+                                    <th>Project</th>
+                                    <th>Block</th>
+                                    <th>Sector</th>
+                                    <th>Plot No</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="paginationInfo" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <a asp-action="Index" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Back to Customer List
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Current search criteria
+            var currentSearch = {
+                project: '',
+                block: '',
+                category: ''
+            };
+
+            var allCustomerData = []; // Store all customer data
+
+            // Handle Search button click (Get Count Only)
+            $('#searchBtn').click(function() {
+                performSearch();
+            });
+
+            // Handle Get All Details button click
+            $('#getAllBtn').click(function() {
+                getAllDetails();
+            });
+
+            // Handle Enter key in dropdowns
+            $('#projectSelect, #blockSelect, #categorySelect').keypress(function(e) {
+                if (e.which == 13) { // Enter key
+                    performSearch();
+                }
+            });
+
+            // Handle Clear button click
+            $('#clearBtn').click(function() {
+                $('#projectSelect').val('All');
+                $('#blockSelect').val('All');
+                $('#categorySelect').val('All');
+                $('#resultsSummary').hide();
+                $('#customersTableSection').hide();
+                $('#exportBtn').prop('disabled', true);
+                $('#printBtn').prop('disabled', true);
+                allCustomerData = [];
+            });
+
+            // Handle Export button click
+            $('#exportBtn').click(function() {
+                exportToExcel();
+            });
+
+            // Handle Print button click
+            $('#printBtn').click(function() {
+                printReport();
+            });
+
+            // Function to perform search (Get Count Only)
+            function performSearch() {
+                // Get selected values
+                var project = $('#projectSelect').val();
+                var block = $('#blockSelect').val();
+                var category = $('#categorySelect').val();
+
+                // Store current search criteria
+                currentSearch = {
+                    project: project,
+                    block: block,
+                    category: category
+                };
+
+                // Show loading spinner
+                $('#loadingSpinner').show();
+                $('#resultsSummary').hide();
+                $('#customersTableSection').hide();
+
+                // Perform AJAX search
+                $.ajax({
+                    url: '@Url.Action("GetCustomersBySelection", "Customers")',
+                    type: 'POST',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: {
+                        project: project,
+                        block: block,
+                        category: category
+                    },
+                    success: function(response) {
+                        $('#loadingSpinner').hide();
+
+                        if (response.success) {
+                            // Update summary - Count only
+                            displaySearchSummary(response, project, block, category, false);
+
+                            // Show results section
+                            $('#resultsSummary').show();
+                            $('#customersTableSection').hide();
+                            $('#exportBtn').prop('disabled', true);
+                            $('#printBtn').prop('disabled', true);
+                        } else {
+                            showError(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loadingSpinner').hide();
+                        showError('An error occurred: ' + error);
+                    }
+                });
+            }
+
+            // Function to get all details
+            function getAllDetails() {
+                // Get selected values
+                var project = $('#projectSelect').val();
+                var block = $('#blockSelect').val();
+                var category = $('#categorySelect').val();
+
+                // Store current search criteria
+                currentSearch = {
+                    project: project,
+                    block: block,
+                    category: category
+                };
+
+                // Show loading spinner
+                $('#loadingSpinner').show();
+                $('#resultsSummary').hide();
+                $('#customersTableSection').hide();
+
+                // Perform AJAX to get all details
+                $.ajax({
+                    url: '@Url.Action("GetAllCustomersBySelection", "Customers")',
+                    type: 'POST',
+                    contentType: 'application/x-www-form-urlencoded',
+                    data: {
+                        project: project,
+                        block: block,
+                        category: category
+                    },
+                    success: function(response) {
+                        $('#loadingSpinner').hide();
+
+                        if (response.success) {
+                            // Store all customer data
+                            allCustomerData = response.customerDetails;
+
+                            // Update summary with details
+                            displaySearchSummary({
+                                totalRecords: response.customerDetails.length,
+                                message: response.message
+                            }, project, block, category, true);
+
+                            // Update customers table
+                            displayCustomersTable(response.customerDetails);
+
+                            // Enable export and print buttons
+                            $('#exportBtn').prop('disabled', false);
+                            $('#printBtn').prop('disabled', false);
+
+                            // Show results sections
+                            $('#resultsSummary').show();
+                            $('#customersTableSection').show();
+                        } else {
+                            showError(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loadingSpinner').hide();
+                        showError('An error occurred: ' + error);
+                    }
+                });
+            }
+
+            // Function to display search summary
+            function displaySearchSummary(response, project, block, category, hasDetails) {
+                var summaryHtml = `
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Total Records Found</h5>
+                                    <h1 class="display-4">${response.totalRecords}</h1>
+                                    <p class="card-text">${response.message}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-filter"></i> Search Criteria</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <strong>Project:</strong><br>
+                                            <span class="badge badge-info badge-lg" style="font-size: 14px; padding: 8px 12px;">${project === 'All' ? 'All Projects' : project}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Block:</strong><br>
+                                            <span class="badge badge-warning badge-lg" style="font-size: 14px; padding: 8px 12px;">${block === 'All' ? 'All Blocks' : block}</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <strong>Category:</strong><br>
+                                            <span class="badge badge-success badge-lg" style="font-size: 14px; padding: 8px 12px;">${category === 'All' ? 'All Categories' : category}</span>
+                                        </div>
+                                    </div>
+                `;
+
+                if (!hasDetails && response.totalRecords > 0) {
+                    summaryHtml += `
+                                    <hr>
+                                    <div class="text-center mt-3">
+                                        <p class="text-muted mb-2">Click "Get All Details" to view customer records</p>
+                                    </div>
+                    `;
+                }
+
+                summaryHtml += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                $('#summaryContent').html(summaryHtml);
+            }
+
+            // Function to display customers in table
+            function displayCustomersTable(customerDetails) {
+                var tableBody = $('#customersTableBody');
+                tableBody.empty();
+
+                if (customerDetails && customerDetails.length > 0) {
+                    customerDetails.forEach(function(customer, index) {
+                        var row = `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${customer.customerNo || 'N/A'}</td>
+                                <td>${customer.customerName || 'N/A'}</td>
+                                <td>${customer.cnicNo || 'N/A'}</td>
+                                <td>${customer.mobileNo || 'N/A'}</td>
+                                <td>${customer.city || 'N/A'}</td>
+                                <td>${customer.project || 'N/A'}</td>
+                                <td>${customer.block || 'N/A'}</td>
+                                <td>${customer.sector || 'N/A'}</td>
+                                <td>${customer.plotNo || 'N/A'}</td>
+                                <td><span class="badge badge-info">${customer.category || 'N/A'}</span></td>
+                            </tr>
+                        `;
+                        tableBody.append(row);
+                    });
+
+                    // Initialize DataTable
+                    if ($.fn.DataTable.isDataTable('#customersTable')) {
+                        $('#customersTable').DataTable().destroy();
+                    }
+
+                    $('#customersTable').DataTable({
+                        "paging": true,
+                        "pageLength": 10,
+                        "searching": true,
+                        "ordering": true,
+                        "info": true,
+                        "autoWidth": false,
+                        "responsive": true
+                    });
+
+                    // Update pagination info
+                    $('#paginationInfo').html(`
+                        <p class="text-muted">
+                            <i class="fas fa-info-circle"></i> Total records: <strong>${customerDetails.length}</strong>
+                        </p>
+                    `);
+                } else {
+                    tableBody.html(`
+                        <tr>
+                            <td colspan="11" class="text-center text-muted">
+                                <i class="fas fa-inbox"></i> No customer records found matching the selected criteria.
+                            </td>
+                        </tr>
+                    `);
+                }
+            }
+
+            // Function to export to Excel
+            function exportToExcel() {
+                if (allCustomerData.length === 0) {
+                    alert('No data to export. Please get all details first.');
+                    return;
+                }
+
+                // Create CSV content
+                var csvContent = "data:text/csv;charset=utf-8,";
+
+                // Add headers
+                csvContent += "Customer No,Customer Name,CNIC No,Mobile No,City,Project,Block,Sector,Plot No,Category\n";
+
+                // Add data rows
+                allCustomerData.forEach(function(customer) {
+                    var row = [
+                        customer.customerNo || '',
+                        customer.customerName || '',
+                        customer.cnicNo || '',
+                        customer.mobileNo || '',
+                        customer.city || '',
+                        customer.project || '',
+                        customer.block || '',
+                        customer.sector || '',
+                        customer.plotNo || '',
+                        customer.category || ''
+                    ];
+                    csvContent += row.map(field => '"' + field + '"').join(",") + "\n";
+                });
+
+                // Create download link
+                var encodedUri = encodeURI(csvContent);
+                var link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "customer_selection_" + new Date().toISOString().slice(0,10) + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            // Function to print report
+            function printReport() {
+                if (allCustomerData.length === 0) {
+                    alert('No data to print. Please get all details first.');
+                    return;
+                }
+
+                // Save original window content
+                var originalContent = document.body.innerHTML;
+
+                // Get the current table content
+                var tableContent = $('#customersTable').clone();
+                tableContent.removeClass('dataTable').removeAttr('id').removeAttr('style');
+
+                // Create print content
+                var printContent = `
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1>Customer Selection Report</h1>
+                        <h3>Bahria Town Billing System</h3>
+                        <p>Generated on: ${new Date().toLocaleDateString()}</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                        <h3 style="margin-top: 0;">Search Criteria:</h3>
+                        <p><strong>Project:</strong>
+                            <span style="display: inline-block; padding: 4px 8px; margin: 2px; background-color: #007bff; color: white; border-radius: 4px; font-size: 14px;">
+                                ${currentSearch.project === 'All' ? 'All Projects' : currentSearch.project}
+                            </span>
+                        </p>
+                        <p><strong>Block:</strong>
+                            <span style="display: inline-block; padding: 4px 8px; margin: 2px; background-color: #ffc107; color: #212529; border-radius: 4px; font-size: 14px;">
+                                ${currentSearch.block === 'All' ? 'All Blocks' : currentSearch.block}
+                            </span>
+                        </p>
+                        <p><strong>Category:</strong>
+                            <span style="display: inline-block; padding: 4px 8px; margin: 2px; background-color: #28a745; color: white; border-radius: 4px; font-size: 14px;">
+                                ${currentSearch.category === 'All' ? 'All Categories' : currentSearch.category}
+                            </span>
+                        </p>
+                        <p><strong>Total Records Found:</strong>
+                            <span style="font-weight: bold; color: #28a745;">${allCustomerData.length}</span>
+                        </p>
+                    </div>
+
+                    <h3>Customer Details</h3>
+                    ${tableContent[0].outerHTML}
+
+                    <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #666;">
+                        <p>Report generated by BMSBT System</p>
+                        <p>Page 1 of 1</p>
+                    </div>
+                `;
+
+                // Replace body content with print content
+                document.body.innerHTML = printContent;
+
+                // Print the page
+                window.print();
+
+                // Restore original content and reload
+                location.reload();
+            }
+
+            // Function to show error message
+            function showError(message) {
+                $('#summaryContent').html(`
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> ${message}
+                    </div>
+                `);
+                $('#resultsSummary').show();
+                $('#customersTableSection').hide();
+            }
+        });
+    </script>
+}

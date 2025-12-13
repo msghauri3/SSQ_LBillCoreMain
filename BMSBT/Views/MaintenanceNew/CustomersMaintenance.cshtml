@@ -1,0 +1,36 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+
+<h3>Customers Maintenance</h3>
+
+<table id="tbl" class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Customer No</th>
+            <th>BT No</th>
+            <th>Name</th>
+            <th>Project</th>
+            <th>SubProject</th>
+            <th>Category</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var c in Model)
+        {
+            <tr>
+                <td>@c.CustomerNo</td>
+                <td>@c.BTNo</td>
+                <td>@c.CustomerName</td>
+                <td>@c.Project</td>
+                <td>@c.SubProject</td>
+                <td>@c.Category</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function () {
+        $('#tbl').DataTable();
+    });
+</script>

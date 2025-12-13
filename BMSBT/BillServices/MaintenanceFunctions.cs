@@ -239,7 +239,7 @@ namespace BMSBT.BillServices
                 PaymentStatus = "Unpaid",
                 LastUpdated = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 BillingDate = DateOnly.FromDateTime(DateTime.Now),
-                MeterNo = customer.MeterNo,
+                //MeterNo = customer.MeterNo,
                 PaymentMethod = "N/A",
                 BankDetail = "N/A",
                 ValidDate = DateOnly.FromDateTime(DateTime.Now.AddMonths(1)),

@@ -1,0 +1,407 @@
+﻿@model IEnumerable<BMSBT.Models.CustomersMaintenance>
+
+@{
+    ViewData["Title"] = "Search Maintenance Customers";
+    Layout = "~/Views/Shared/_LayoutCustomers.cshtml";
+}
+
+<head>
+    <style>
+        .row-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .create-link {
+            text-decoration: none;
+            color: #142141;
+            font-weight: bold;
+        }
+
+            .create-link:hover {
+                color: #0066cc;
+            }
+
+        .filter-form {
+            margin: 0;
+        }
+
+        .dropdown-container {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .custom-dropdown {
+            width: 200px;
+            height: 40px;
+            padding: 5px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-buttons {
+            margin: 20px 0;
+        }
+
+        .table-container {
+            margin-top: 20px;
+        }
+
+        .record-checkbox {
+            cursor: pointer;
+        }
+
+        .btn-process {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+            .btn-process:hover {
+                background-color: #218838;
+                border-color: #1e7e34;
+            }
+    </style>
+</head>
+
+<div class="container-fluid">
+    <div class="row-container">
+        <h2>Search Maintenance Customers</h2>
+        <a asp-action="Create" class="btn btn-primary create-link">
+            <i class="fas fa-plus"></i> Create New Maintenance Customer
+        </a>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Filter Maintenance Customers</h5>
+        </div>
+        <div class="card-body">
+            <div class="dropdown-container">
+                <select id="projectDropdown" class="form-control custom-dropdown">
+                    <option value="">-- Projects --</option>
+                </select>
+                <select id="subprojectDropdown" class="form-control custom-dropdown">
+                    <option value="">-- Subprojects --</option>
+                </select>
+                <select id="sectorDropdown" class="form-control custom-dropdown">
+                    <option value="">-- Sectors --</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button id="processCustomersBtn" class="btn btn-process">
+            <i class="fas fa-cogs"></i> Process Selected Maintenance Customers
+        </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="card table-container">
+        <div class="card-body">
+            <div class="gridContainer" id="customerGridContainer">
+                <table id="studentsTable" class="table table-striped table-bordered dt-responsive nowrap" width="100%" cellspacing="0">
+                    <thead class="thead-dark">
+                        <tr>
+                            <th width="50px">
+                                <input type="checkbox" id="selectAllCheckbox" title="Select All" />
+                            </th>
+                            <th>Customer Name</th>
+                            <th>BT No</th>
+                            <th>Project</th>
+                            <th>SubProject</th>
+                            <th>Sector</th>
+                            <th>Tariff</th>
+                            <th>Maintenance BT No</th>
+                            <th>Bill Status</th>
+                            <th width="120px">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerGridBody">
+                        <!-- Data will be dynamically inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    let dataTable;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM loaded, initializing Maintenance Customers...');
+
+        // Initialize DataTable with empty data
+        initializeDataTable();
+
+        // Load dropdowns
+        loadDropdowns();
+
+        // Add event listeners
+        document.getElementById('projectDropdown').addEventListener('change', updateDropdowns);
+        document.getElementById('subprojectDropdown').addEventListener('change', updateGrid);
+        document.getElementById('sectorDropdown').addEventListener('change', updateGrid);
+
+        // Add event listener for button click
+        document.getElementById('processCustomersBtn').addEventListener('click', processSelectedCustomers);
+
+        // Select all functionality
+        document.getElementById('selectAllCheckbox').addEventListener('change', function() {
+            const isChecked = this.checked;
+            document.querySelectorAll('.record-checkbox').forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        });
+    });
+
+    function initializeDataTable() {
+        dataTable = $('#studentsTable').DataTable({
+            paging: true,
+            searching: true,
+            lengthChange: true,
+            pageLength: 10,
+            responsive: true,
+            columns: [
+                { orderable: false }, // Select checkbox
+                null, // CustomerName
+                null, // BTNo
+                null, // Project
+                null, // SubProject
+                null, // Sector
+                null, // TariffName
+                null, // BTNoMaintenance
+                null, // BillStatusMaint
+                { orderable: false } // Actions
+            ],
+            language: {
+                search: "Search maintenance customers:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            }
+        });
+    }
+
+    function loadDropdowns() {
+        console.log('Loading dropdowns for Maintenance Customers...');
+
+        // Load projects
+        axios.get('/Configs/GetProjects')
+            .then(response => {
+                console.log('Projects loaded:', response.data);
+                populateDropdown('projectDropdown', response.data);
+            })
+            .catch(error => console.error('Error loading projects:', error));
+
+        // Load sectors
+        axios.get('/Configs/GetSectors')
+            .then(response => {
+                console.log('Sectors loaded:', response.data);
+                populateDropdown('sectorDropdown', response.data);
+            })
+            .catch(error => console.error('Error loading sectors:', error));
+    }
+
+    function populateDropdown(dropdownId, data) {
+        const dropdown = document.getElementById(dropdownId);
+        const dropdownName = dropdownId.replace('Dropdown', '').replace(/([A-Z])/g, ' $1').trim();
+
+        dropdown.innerHTML = `<option value="">-- All ${dropdownName} --</option>`;
+
+        if (data && data.length > 0) {
+            data.forEach(item => {
+                const option = document.createElement('option');
+
+                if (typeof item === 'string') {
+                    option.value = item;
+                    option.textContent = item;
+                } else if (typeof item === 'object' && item !== null) {
+                    // Handle different possible property names
+                    const value = item.value || item.id || item.uid || item.name || item.tarrifName;
+                    const text = item.text || item.name || item.tarrifName || value;
+
+                    if (value && text) {
+                        option.value = value;
+                        option.textContent = text;
+                    }
+                }
+
+                if (option.value && option.textContent) {
+                    dropdown.appendChild(option);
+                }
+            });
+        }
+    }
+
+    function updateDropdowns() {
+        const selectedProject = document.getElementById('projectDropdown').value;
+
+        if (selectedProject) {
+            // Update subprojects based on selected project
+            axios.get(`/Configs/GetSubProjects?project=${encodeURIComponent(selectedProject)}`)
+                .then(response => {
+                    console.log('Subprojects loaded:', response.data);
+                    populateDropdown('subprojectDropdown', response.data);
+                })
+                .catch(error => console.error('Error loading subprojects:', error));
+
+            // Update sectors based on selected project
+            axios.get(`/Configs/GetSectors?project=${encodeURIComponent(selectedProject)}`)
+                .then(response => {
+                    console.log('Sectors loaded:', response.data);
+                    populateDropdown('sectorDropdown', response.data);
+                })
+                .catch(error => console.error('Error loading sectors:', error));
+        } else {
+            // Clear dependent dropdowns
+            document.getElementById('subprojectDropdown').innerHTML = '<option value="">-- All Subprojects --</option>';
+            loadDropdowns(); // Reload original sectors
+        }
+
+        // Update grid when project changes
+        updateGrid();
+    }
+
+    function updateGrid() {
+        const selectedProject = document.getElementById('projectDropdown').value;
+        const selectedSubProject = document.getElementById('subprojectDropdown').value;
+        const selectedSector = document.getElementById('sectorDropdown').value;
+
+        console.log('Updating maintenance grid with filters:', {
+            project: selectedProject,
+            subproject: selectedSubProject,
+            sector: selectedSector
+        });
+
+        // Show loading state
+        $('#customerGridBody').html('<tr><td colspan="10" class="text-center">Loading maintenance customers...</td></tr>');
+
+        if (selectedProject) {
+            axios.get(`/CustomersMaintenance/GetCustomersPSPS`, {
+                params: {
+                    project: selectedProject,
+                    subproject: selectedSubProject,
+                    sectorname: selectedSector
+                }
+            })
+            .then(response => {
+                console.log('Maintenance customers data received:', response.data);
+
+                // Destroy existing DataTable instance
+                if (dataTable) {
+                    dataTable.destroy();
+                }
+
+                // Update table body
+                document.getElementById('customerGridBody').innerHTML = response.data;
+
+                // Reinitialize DataTable
+                initializeDataTable();
+            })
+            .catch(error => {
+                console.error('Error loading maintenance customers:', error);
+                $('#customerGridBody').html('<tr><td colspan="10" class="text-center text-danger">Error loading maintenance customers data</td></tr>');
+            });
+        } else {
+            // Clear table if no project selected
+            if (dataTable) {
+                dataTable.destroy();
+            }
+            document.getElementById('customerGridBody').innerHTML = '<tr><td colspan="10" class="text-center">Please select a project to view maintenance customers</td></tr>';
+            initializeDataTable();
+        }
+    }
+
+    function processSelectedCustomers() {
+        const selectedCheckboxes = document.querySelectorAll('.record-checkbox:checked');
+
+        if (selectedCheckboxes.length === 0) {
+            alert('Please select at least one maintenance customer');
+            return;
+        }
+
+        const selectedCustomersData = Array.from(selectedCheckboxes).map(checkbox => ({
+            Uid: checkbox.value,
+            Btno: checkbox.dataset.btno,
+            CustomerName: checkbox.dataset.customerName,
+            TariffName: checkbox.dataset.tariffName
+        }));
+
+        console.log('Processing maintenance customers:', selectedCustomersData);
+
+        // Show loading state
+        const processBtn = document.getElementById('processCustomersBtn');
+        const originalText = processBtn.innerHTML;
+        processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        processBtn.disabled = true;
+
+        // Send the data to the server
+        fetch('/CustomersMaintenance/ProcessCustomers', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(selectedCustomersData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Maintenance customers processed successfully!');
+                // Optionally redirect or refresh the grid
+                // window.location.href = '/CustomersMaintenance/Index';
+                updateGrid(); // Refresh the grid
+            } else {
+                alert(data.message || 'An error occurred while processing maintenance customers');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the request: ' + error.message);
+        })
+        .finally(() => {
+            // Restore button state
+            processBtn.innerHTML = originalText;
+            processBtn.disabled = false;
+        });
+    }
+
+    // Double-click event handler for viewing customer details
+    $(document).on('dblclick', '#studentsTable tbody tr', function () {
+        const customerId = $(this).data('id') || $(this).find('.record-checkbox').val();
+        if (customerId) {
+            window.location.href = '/CustomersMaintenance/Details/' + customerId;
+        }
+    });
+</script>
